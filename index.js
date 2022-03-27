@@ -1,27 +1,11 @@
 import puppeteer from "puppeteer";
 import csv from "csv-parser";
 import * as fs from 'fs';
-import path, {
-  resolve
-} from "path";
+import path, { resolve } from "path";
 
 const DIR = 'products';
 
-
-const getProductData = tag => {
-  let data = [];
-  const items = document.querySelectorAll(tag);
-  return new Promise((resolve, rejects) => {
-    items.forEach(item => {
-      const image_id = item.dataset.image_id;
-      if (!image_id) return;
-      data.push(image_id);
-    });
-    resolve(data);
-  })
-}
-
-async function  getIdFromCsv ( lang ) {
+const getIdFromCsv = async lang  => {
 
   const __dirname = path.resolve();
   const directoryPath = path.join(__dirname, DIR);
@@ -52,38 +36,25 @@ async function  getIdFromCsv ( lang ) {
 
 };
 
-async function init() {
-  const idList = await getIdFromCsv('fr') 
-  console.log(idList)
-}
+( async () => {
 
-init();
-
-
-/* (async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-
-  var results = [];
-  prodsFr.map(prod_id => {
-
-    page.goto(`https://stage-wpf.poliform.dev/?p=${prod_id}`);
-
-    page.evaluate(() => {
-      let items = document.querySelectorAll('img');
-      items.forEach(item => {
-        const ID = parseInt(item.dataset.image_id);
-        const src = item.getAttribute('src');
-        if (!ID) return;
-        results.push({
-          ID,
-          src
-        });
-      });
-      return results
-    })
-
-  })
-
+  const browser = await puppeteer.launch({dumpio: false});
+  const [ page ] = await browser.pages();
+  const list_id = await getIdFromCsv('fr');
+  
+  
+  for (let i = 0; i < list_id.length; i++) {
+    const url = `https://stage-wpf.poliform.dev/?p=${list_id[i]}`;
+    try {
+      await page.goto( url );
+      const data = await page.$$eval('img[data-image_id]', item => item.map( img => img.dataset.image_id ) )
+      console.table( data );
+    }
+    catch (err) {
+      console.log( err )
+    }
+  }
+  
   await browser.close();
-})(); */
+
+})();
