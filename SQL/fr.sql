@@ -1,7 +1,6 @@
 select *
 from wp_posts wp 
 where post_title != ''
-and post_title NOT LIKE 'Poliform_%'
 and ID in (109012,
 130906,
 130914,
