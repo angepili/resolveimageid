@@ -6,7 +6,7 @@ import path, { resolve } from "path";
 const SRC_DIR = './products';
 const DEST_DIRT = './export';
 const BASE_URL = 'https://stage-wpf.poliform.dev/?p=';
-const LANG = 'fr';
+const LANG = 'de';
 const DEST_FILE = `${DEST_DIRT}/export-${LANG}.csv`;
 
 const getIdFromCsv = async lang  => {
@@ -91,7 +91,7 @@ const initFile = () => {
         })
       });
 
-      const listPageIdLine = listPageId.join(',\n');
+      const listPageIdLine = listPageId.join(',\n')+',';
       if( !listPageIdLine ) return;
 
       const firstLine = i > 0 ? "\n" : "";
