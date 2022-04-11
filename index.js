@@ -87,7 +87,7 @@ const initFile = () => {
       const listPageId = await page.$$eval('img[data-image_id]', item => {
         return item.map( img => {
           const { image_id } = img.dataset;
-          return parseInt( image_id ) 
+          return parseInt( image_id ) > 0 && parseInt( image_id );
         })
       });
 
