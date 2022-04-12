@@ -6,7 +6,7 @@ import path, { resolve } from "path";
 const SRC_DIR = './products';
 const DEST_DIRT = './export';
 const BASE_URL = 'https://stage-wpf.poliform.dev/?p=';
-const LANG = 'zh-hans';
+const LANG = 'it';
 const DEST_FILE = `${DEST_DIRT}/export-${LANG}.csv`;
 
 const getIdFromCsv = async lang  => {
