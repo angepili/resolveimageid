@@ -44,7 +44,7 @@ const writeFile = ( newLine, destination )  => {
     const product = products[i];
     const url = `${SCRAPE_URL}${product.ID}`;
 
-    console.log('------------------------------------------');
+    
 
     try {
 
@@ -62,7 +62,8 @@ const writeFile = ( newLine, destination )  => {
       });
 
       writeFile( JSON.stringify( listPageId ) , `./data/${product.ID}.json` )
-
+      
+      console.log('------------------------------------------');
       console.log(`Generazione export di ${product.ID} : ${product.post_title}`);
      
     }
