@@ -1,13 +1,11 @@
-import puppeteer from "puppeteer";
-import csv from "csv-parser";
 import * as fs from 'fs';
-import path from "path";
-import fetch from 'node-fetch';
 import * as dotenv from 'dotenv'
+import puppeteer from "puppeteer";
+import fetch from 'node-fetch';
 
 dotenv.config()
 
-const { BASE_URL, API_ENDPOINT, PARAMETER, LANGX, SRC_DIR } = process.env;
+const { BASE_URL, API_ENDPOINT, PARAMETER, LANGX } = process.env;
 
 const SRC_URL = `${BASE_URL}${LANGX}${API_ENDPOINT}`;
 const SCRAPE_URL = `${BASE_URL}${PARAMETER}`
@@ -65,7 +63,7 @@ const writeFile = ( newLine, destination )  => {
 
       writeFile( JSON.stringify( listPageId ) , `./data/${product.ID}.json` )
 
-      console.log(`Generating export of ${product.ID} : ${product.post_title}`);
+      console.log(`Generazione export di ${product.ID} : ${product.post_title}`);
      
     }
     catch (err) {
