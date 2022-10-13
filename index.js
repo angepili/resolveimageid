@@ -1,82 +1,50 @@
 import puppeteer from "puppeteer";
 import csv from "csv-parser";
 import * as fs from 'fs';
-import path, { resolve } from "path";
+import path from "path";
+import fetch from 'node-fetch';
+import * as dotenv from 'dotenv'
 
-const SRC_DIR = './products';
-const DEST_DIRT = './export';
-const BASE_URL = 'https://stage-wpf.poliform.dev/?p=';
-const LANG = 'de';
-const DEST_FILE = `${DEST_DIRT}/export-${LANG}.csv`;
+dotenv.config()
 
-const getIdFromCsv = async lang  => {
+const { BASE_URL, API_ENDPOINT, PARAMETER, LANGX, SRC_DIR } = process.env;
 
-  const __dirname = path.resolve();
-  const directoryPath = path.join(__dirname, SRC_DIR);
+const SRC_URL = `${BASE_URL}${LANGX}${API_ENDPOINT}`;
+const SCRAPE_URL = `${BASE_URL}${PARAMETER}`
 
-  const results = [];
+const getProductsData = async () => {
 
-  return new Promise((resolve, reject) => {
-    fs.readdir(directoryPath, (err, files) => {
-  
-      const file = files.find( file => {
-        const extension = path.extname(file);
-        const filename = path.basename(file, extension);
-        return lang == path.basename(filename) && file;
-      });
-
-      if (file) {
-        fs.createReadStream( `${SRC_DIR}/${file}` )
-        .pipe(csv())
-        .on('data', (data) => {
-          results.push( parseInt( data.ID ) )
-          resolve( results );
-        })
-      }
-  
-    });
-
-  })
+  const response = await fetch(SRC_URL);
+  const resp = await response.json();
+ 
+  if( resp && resp.success === true ) return resp.data;
 
 };
 
-const writeFile = newLine => {
-  fs.appendFileSync( DEST_FILE , newLine, function (err) {
-    if (err) throw err;
-    console.log("It's saved!");
-  });
-}
+const writeFile = ( newLine, destination )  => {
 
-const initFile = () => {
-
-  fs.stat( DEST_FILE , function (err, stats) {
- 
-    if (err)  return console.error(err);
- 
-    fs.unlink( DEST_FILE  ,function(err){
-      if(err) return console.log(err);
-    });
-
-    fs.open( DEST_FILE , 'w', (err, file) => {
+  if( fs.existsSync( destination ) ) {
+    fs.unlinkSync( destination );
+  } else {
+    fs.appendFileSync( destination , newLine, function (err) {
       if (err) throw err;
-      console.log( `Create : ${DEST_FILE}` );
+      console.log("It's saved!");
     });
-
- });
+  }
 
 }
+
 
 ( async () => {
 
+
   const browser = await puppeteer.launch({dumpio: false});
   const [ page ] = await browser.pages();
-  const list_id = await getIdFromCsv( LANG );
+  const products = await getProductsData();
 
-  initFile();
-  
-  for (let i = 0; i < list_id.length; i++) {
-    const page_id = list_id[i];
-    const url = `${BASE_URL}${page_id}`;
+  for (let i = 0; i < products.length; i++) {
+    const product = products[i];
+    const url = `${SCRAPE_URL}${product.ID}`;
 
     console.log('------------------------------------------');
 
@@ -86,19 +54,18 @@ const initFile = () => {
 
       const listPageId = await page.$$eval('img[data-image_id]', item => {
         return item.map( img => {
+          const extension = img.src.substr( img.src.length - 3) == 'svg' ? 'svg' : 'image';
           const { image_id } = img.dataset;
-          return parseInt( image_id ) > 0 && parseInt( image_id );
+          return {
+            id : parseInt( image_id ) > 0 && parseInt( image_id ),
+            ext : extension
+          }
         })
       });
 
-      const listPageIdLine = listPageId.join(',\n')+',';
-      if( !listPageIdLine ) return;
+      writeFile( JSON.stringify( listPageId ) , `./data/${product.ID}.json` )
 
-      const firstLine = i > 0 ? "\n" : "";
-      writeFile( firstLine + listPageIdLine );
-      console.log(`Adding product ${page_id}`);
-      console.table( listPageId );
-      console.info(` Added ${i+1} product of ${list_id.length} `)
+      console.log(`Generating export of ${product.ID} : ${product.post_title}`);
      
     }
     catch (err) {
